@@ -1,3 +1,5 @@
+Challenges found here: https://fly.io/dist-sys/
+
 Echo - Run this:
 ./maelstrom test -w echo --bin runner.sh --node-count 1 --time-limit 10
 
