@@ -1,8 +1,8 @@
 package com.jdurham.broadcast;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class MessageStore {
-    final List<Integer> messages = new ArrayList<>();
+    final Set<Integer> messages = new HashSet<>();
 }

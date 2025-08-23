@@ -6,3 +6,6 @@ Unique ID:
 
 Single Node Broadcast:
 ./maelstrom test -w broadcast --bin runner.sh --node-count 1 --time-limit 20 --rate 10
+
+Multi node broadcast:
+./maelstrom test -w broadcast --bin runner.sh --node-count 5 --time-limit 20 --rate 10

@@ -2,6 +2,7 @@ package com.jdurham.broadcast;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.jdurham.NodeHandler;
+import com.jdurham.NodeMetadataStore;
 import com.jdurham.Request;
 import com.jdurham.Response;
 
@@ -12,10 +13,10 @@ public class TopologyHandler implements NodeHandler<
         TopologyHandler.TopologyRequest,
         TopologyHandler.TopologyResponse> {
 
-    private final TopologyStore topologyStore;
+    private final NodeMetadataStore nodeMetadataStore;
 
-    public TopologyHandler(TopologyStore topologyStore) {
-        this.topologyStore = topologyStore;
+    public TopologyHandler(NodeMetadataStore nodeMetadataStore) {
+        this.nodeMetadataStore = nodeMetadataStore;
     }
 
     public static class TopologyRequest extends Request {
@@ -41,7 +42,7 @@ public class TopologyHandler implements NodeHandler<
 
     @Override
     public TopologyResponse handle(TopologyRequest request) {
-        topologyStore.topology = request.topology;
+        nodeMetadataStore.topology = request.topology;
 
         return new TopologyResponse(request.msgId, request.msgId);
     }

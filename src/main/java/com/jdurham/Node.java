@@ -17,9 +17,18 @@ import java.util.Map;
 public class Node {
     private final ObjectMapper mapper = new ObjectMapper();
 
+    private final NodeMetadataStore nodeMetadataStore;
+
     private final Map<String, NodeHandler<? extends Request, ? extends Response>> handlers = new HashMap<>();
 
     static class InitHandler implements NodeHandler<InitHandler.InitRequest, InitHandler.InitResponse> {
+
+        private final NodeMetadataStore nodeMetadataStore;
+
+        public InitHandler(NodeMetadataStore nodeMetadataStore) {
+            this.nodeMetadataStore = nodeMetadataStore;
+        }
+
         @Override
         public Class<InitRequest> getRequestType() {
             return InitRequest.class;
@@ -32,6 +41,8 @@ public class Node {
 
         @Override
         public InitResponse handle(InitRequest request) {
+            this.nodeMetadataStore.nodeId = request.nodeId;
+            this.nodeMetadataStore.nodeIds = request.nodeIds;
             return new InitResponse("init_ok", request.msgId, request.msgId);
         }
 
@@ -52,8 +63,9 @@ public class Node {
 
     }
 
-    public Node() {
-        registerHandler("init", new InitHandler());
+    public Node(NodeMetadataStore nodeMetadataStore) {
+        this.nodeMetadataStore = nodeMetadataStore;
+        registerHandler("init", new InitHandler(nodeMetadataStore));
     }
 
     <T extends Request, R extends Response> void registerHandler(String type, NodeHandler<T, R> handler) {
@@ -97,7 +109,7 @@ public class Node {
                 outputResponse.put("body", responseBody);
 
                 final String responseJson = mapper.writeValueAsString(outputResponse);
-                System.err.println("responding with " + outputResponse.toString());
+                System.err.println("responding with " + outputResponse);
                 System.out.println(responseJson);
             } catch (Exception e) {
                 System.err.println("Failed to read input: " + e.getMessage());

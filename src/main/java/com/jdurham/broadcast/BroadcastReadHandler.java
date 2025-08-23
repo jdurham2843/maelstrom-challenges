@@ -5,7 +5,7 @@ import com.jdurham.NodeHandler;
 import com.jdurham.Request;
 import com.jdurham.Response;
 
-import java.util.List;
+import java.util.Set;
 
 public class BroadcastReadHandler implements NodeHandler<
         BroadcastReadHandler.ReadRequest,
@@ -22,9 +22,9 @@ public class BroadcastReadHandler implements NodeHandler<
 
     public static class ReadResponse extends Response {
         @JsonProperty
-        public List<Integer> messages;
+        public Set<Integer> messages;
 
-        public ReadResponse(int msgId, int inReplyTo, List<Integer> messages) {
+        public ReadResponse(int msgId, int inReplyTo, Set<Integer> messages) {
             super("read_ok", msgId, inReplyTo);
             this.messages = messages;
         }
