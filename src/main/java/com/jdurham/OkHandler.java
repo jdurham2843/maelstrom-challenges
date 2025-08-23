@@ -11,8 +11,8 @@ public class OkHandler implements NodeHandler<OkHandler.OkRequest, OkHandler.OkR
     public static class OkResponse extends Response {
         @JsonProperty
         String echo;
-        public OkResponse(String type, int msgId, int inReplyTo, String echo) {
-            super(type, msgId, inReplyTo);
+        public OkResponse(int msgId, int inReplyTo, String echo) {
+            super("echo_ok", msgId, inReplyTo);
             this.echo = echo;
         }
     }
@@ -29,6 +29,6 @@ public class OkHandler implements NodeHandler<OkHandler.OkRequest, OkHandler.OkR
 
     @Override
     public OkResponse handle(OkRequest request) {
-        return new OkResponse("echo_ok", request.msgId, request.msgId, request.echo);
+        return new OkResponse(request.msgId, request.msgId, request.echo);
     }
 }

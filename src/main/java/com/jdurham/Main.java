@@ -9,6 +9,7 @@ public class Main {
         final Node node = new Node();
 
         node.registerHandler("echo", new OkHandler());
+        node.registerHandler("generate", new GenerateIdHandler());
 
         node.main();
     }
