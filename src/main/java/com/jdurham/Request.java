@@ -5,11 +5,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Request {
     @JsonProperty
-    String type;
+    public String type;
     @JsonProperty
     @JsonAlias(value = "msg_id")
-    int msgId;
+    public int msgId;
     @JsonProperty
     @JsonAlias(value = "in_reply_to")
-    int inReplyTo;
+    public int inReplyTo;
 }
