@@ -2,7 +2,8 @@ package com.jdurham;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.UUID;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 
 public class GenerateIdHandler implements NodeHandler<
         GenerateIdHandler.GenerateIdRequest,
@@ -34,8 +35,29 @@ public class GenerateIdHandler implements NodeHandler<
 
     @Override
     public GenerateIdResponse handle(GenerateIdRequest request) {
-        final String id = UUID.randomUUID().toString();
+        final String id = generateId();
 
         return new GenerateIdResponse(request.msgId, request.msgId, id);
+    }
+
+    private String generateId() {
+        SecureRandom random = null;
+        try {
+            random = SecureRandom.getInstanceStrong();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        byte[] randomBytes = new byte[16];
+        random.nextBytes(randomBytes);
+
+        return bytesToHex(randomBytes);
+    }
+
+    private String bytesToHex(byte[] bytes){
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 }

@@ -1,11 +1,12 @@
 package com.jdurham;
 
-import com.jdurham.broadcast.*;
+import com.jdurham.broadcast.BroadcastHandler;
+import com.jdurham.broadcast.BroadcastReadHandler;
+import com.jdurham.broadcast.MessageStore;
+import com.jdurham.broadcast.TopologyHandler;
 
 import java.io.IOException;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) throws IOException {
         final NodeMetadataStore nodeMetadataStore = new NodeMetadataStore();
@@ -13,10 +14,13 @@ public class Main {
 
         final MessageStore messageStore = new MessageStore();
 
+        node.registerHandler("echo", new OkHandler());
+        node.registerHandler("generate", new GenerateIdHandler());
         node.registerHandler("broadcast", new BroadcastHandler(messageStore, nodeMetadataStore));
         node.registerHandler("read", new BroadcastReadHandler(messageStore));
         node.registerHandler("topology", new TopologyHandler(nodeMetadataStore));
 
         node.main();
     }
+
 }
