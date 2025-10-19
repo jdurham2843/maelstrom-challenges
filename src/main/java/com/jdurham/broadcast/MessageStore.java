@@ -1,8 +1,20 @@
 package com.jdurham.broadcast;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class MessageStore {
-    final Set<Integer> messages = new HashSet<>();
+    private final List<Integer> messages = new ArrayList<>();
+
+    boolean contains(int message) {
+        return messages.contains(message);
+    }
+
+    void add(int message) {
+        messages.add(message);
+    }
+
+    Collection<Integer> getAllMessages() {
+        return messages.stream().sorted().toList();
+    }
+
 }

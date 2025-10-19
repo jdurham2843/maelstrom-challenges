@@ -11,3 +11,6 @@ Single Node Broadcast:
 
 Multi node broadcast:
 ./maelstrom test -w broadcast --bin runner.sh --node-count 5 --time-limit 20 --rate 10
+
+Fault tolerant broadcast:
+./maelstrom test -w broadcast --bin runner.sh --node-count 5 --time-limit 20 --rate 10 --nemesis partition

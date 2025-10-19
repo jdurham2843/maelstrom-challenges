@@ -34,7 +34,7 @@ public class GenerateIdHandler implements NodeHandler<
     }
 
     @Override
-    public GenerateIdResponse handle(GenerateIdRequest request) {
+    public GenerateIdResponse handle(MessageContext messageContext, GenerateIdRequest request) {
         final String id = generateId();
 
         return new GenerateIdResponse(request.msgId, request.msgId, id);

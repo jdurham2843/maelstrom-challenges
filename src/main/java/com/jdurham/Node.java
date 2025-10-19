@@ -40,7 +40,7 @@ public class Node {
         }
 
         @Override
-        public InitResponse handle(InitRequest request) {
+        public InitResponse handle(MessageContext messageContext, InitRequest request) {
             this.nodeMetadataStore.nodeId = request.nodeId;
             this.nodeMetadataStore.nodeIds = request.nodeIds;
             return new InitResponse("init_ok", request.msgId, request.msgId);
@@ -72,19 +72,21 @@ public class Node {
         handlers.put(type, handler);
     }
 
-    JsonNode dispatchToHandler(JsonNode requestJsonNode) throws JsonProcessingException {
+    JsonNode dispatchToHandler(MessageContext context) throws JsonProcessingException {
+        final JsonNode requestJsonNode = context.requestBody();
         final String type = requestJsonNode.get("type").asText();
 
         final NodeHandler<? extends Request, ? extends Response> handler = handlers.get(type);
 
-        return doDispatch(handler, requestJsonNode);
+        return doDispatch(handler, context);
     }
 
-    private <T extends Request, R extends Response> JsonNode doDispatch(NodeHandler<T, R> handler, JsonNode requestJsonNode) throws JsonProcessingException {
+    private <T extends Request, R extends Response> JsonNode doDispatch(NodeHandler<T, R> handler, MessageContext messageContext) throws JsonProcessingException {
+        final JsonNode requestJsonNode = messageContext.requestBody();
         final T request = mapper.treeToValue(requestJsonNode, handler.getRequestType());
-        final R response = handler.handle(request);
+        final R response = handler.handle(messageContext, request);
 
-        return mapper.valueToTree(response);
+        return response != null ? mapper.valueToTree(response) : null;
     }
 
     // main
@@ -95,22 +97,26 @@ public class Node {
         while (true) {
             try {
                 final String input = br.readLine();
-                System.err.println("read message! " + input);
+                // System.err.println("read message! " + input);
                 final JsonNode inputJsonNode = mapper.readTree(input);
                 final String src = inputJsonNode.get("src").asText();
                 final String dest = inputJsonNode.get("dest").asText();
                 final JsonNode requestBody = inputJsonNode.get("body");
 
-                final JsonNode responseBody = dispatchToHandler(requestBody);
+                final JsonNode responseBody = dispatchToHandler(new MessageContext(src, dest, requestBody));
 
-                final ObjectNode outputResponse = mapper.createObjectNode();
-                outputResponse.put("src", dest);
-                outputResponse.put("dest", src);
-                outputResponse.put("body", responseBody);
+                if (responseBody != null) {
+                    final ObjectNode outputResponse = mapper.createObjectNode();
+                    outputResponse.put("src", dest);
+                    outputResponse.put("dest", src);
+                    outputResponse.put("body", responseBody);
 
-                final String responseJson = mapper.writeValueAsString(outputResponse);
-                System.err.println("responding with " + outputResponse);
-                System.out.println(responseJson);
+                    final String responseJson = mapper.writeValueAsString(outputResponse);
+                    // System.err.println("responding with " + outputResponse);
+                    System.out.println(responseJson);
+                } else {
+                    // System.err.println("response was null, so skipping.");
+                }
             } catch (Exception e) {
                 System.err.println("Failed to read input: " + e.getMessage());
             }

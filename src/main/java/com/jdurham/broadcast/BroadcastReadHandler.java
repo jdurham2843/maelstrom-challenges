@@ -1,11 +1,12 @@
 package com.jdurham.broadcast;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.jdurham.MessageContext;
 import com.jdurham.NodeHandler;
 import com.jdurham.Request;
 import com.jdurham.Response;
 
-import java.util.Set;
+import java.util.Collection;
 
 public class BroadcastReadHandler implements NodeHandler<
         BroadcastReadHandler.ReadRequest,
@@ -22,9 +23,9 @@ public class BroadcastReadHandler implements NodeHandler<
 
     public static class ReadResponse extends Response {
         @JsonProperty
-        public Set<Integer> messages;
+        public Collection<Integer> messages;
 
-        public ReadResponse(int msgId, int inReplyTo, Set<Integer> messages) {
+        public ReadResponse(int msgId, int inReplyTo, Collection<Integer> messages) {
             super("read_ok", msgId, inReplyTo);
             this.messages = messages;
         }
@@ -40,7 +41,7 @@ public class BroadcastReadHandler implements NodeHandler<
     }
 
     @Override
-    public ReadResponse handle(ReadRequest request) {
-        return new ReadResponse(request.msgId, request.msgId, messageStore.messages);
+    public ReadResponse handle(MessageContext messageContext, ReadRequest request) {
+        return new ReadResponse(request.msgId, request.msgId, messageStore.getAllMessages());
     }
 }

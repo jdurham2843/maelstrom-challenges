@@ -28,7 +28,7 @@ public class OkHandler implements NodeHandler<OkHandler.OkRequest, OkHandler.OkR
     }
 
     @Override
-    public OkResponse handle(OkRequest request) {
+    public OkResponse handle(MessageContext messageContext, OkRequest request) {
         return new OkResponse(request.msgId, request.msgId, request.echo);
     }
 }
