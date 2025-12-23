@@ -3,14 +3,15 @@ package com.jdurham;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class OkHandler implements NodeHandler<OkHandler.OkRequest, OkHandler.OkResponse> {
-    public static class OkRequest extends Request {
+    public static class OkRequest extends Message {
         @JsonProperty
         String echo;
     }
 
-    public static class OkResponse extends Response {
+    public static class OkResponse extends Message {
         @JsonProperty
         String echo;
+
         public OkResponse(int msgId, int inReplyTo, String echo) {
             super("echo_ok", msgId, inReplyTo);
             this.echo = echo;

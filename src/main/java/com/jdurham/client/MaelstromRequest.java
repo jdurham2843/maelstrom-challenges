@@ -1,6 +1,6 @@
 package com.jdurham.client;
 
-import com.jdurham.Request;
+import com.jdurham.Message;
 
-public record MaelstromRequest(String src, String dest, Request request, int msgId) {
+public record MaelstromRequest(String src, String dest, Message request, int msgId) {
 }

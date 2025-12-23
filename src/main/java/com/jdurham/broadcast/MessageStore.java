@@ -1,9 +1,10 @@
 package com.jdurham.broadcast;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MessageStore {
-    private final List<Integer> messages = new ArrayList<>();
+    private final Set<Integer> messages = ConcurrentHashMap.newKeySet();
 
     boolean contains(int message) {
         return messages.contains(message);
@@ -14,7 +15,7 @@ public class MessageStore {
     }
 
     Collection<Integer> getAllMessages() {
-        return messages.stream().sorted().toList();
+        return messages;
     }
 
 }

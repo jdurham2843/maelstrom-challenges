@@ -16,7 +16,7 @@ public class MaelstromClient {
 
         try {
             final String requestPayload = mapper.writeValueAsString(outputResponse);
-            System.err.println("Attempting to send " + requestPayload);
+            // System.err.println("Attempting to send " + requestPayload);
             System.out.println(requestPayload);
         } catch (JsonProcessingException e) {
             System.err.println("Failed to send request of type: " + maelstromRequest.request().type);

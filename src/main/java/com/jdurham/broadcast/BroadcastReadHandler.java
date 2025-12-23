@@ -1,10 +1,7 @@
 package com.jdurham.broadcast;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.jdurham.MessageContext;
-import com.jdurham.NodeHandler;
-import com.jdurham.Request;
-import com.jdurham.Response;
+import com.jdurham.*;
 
 import java.util.Collection;
 
@@ -18,10 +15,10 @@ public class BroadcastReadHandler implements NodeHandler<
         this.messageStore = messageStore;
     }
 
-    public static class ReadRequest extends Request {
+    public static class ReadRequest extends Message {
     }
 
-    public static class ReadResponse extends Response {
+    public static class ReadResponse extends Message {
         @JsonProperty
         public Collection<Integer> messages;
 

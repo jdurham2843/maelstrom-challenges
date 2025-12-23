@@ -16,12 +16,12 @@ public class TopologyHandler implements NodeHandler<
         this.nodeMetadataStore = nodeMetadataStore;
     }
 
-    public static class TopologyRequest extends Request {
+    public static class TopologyRequest extends Message {
         @JsonProperty
         Map<String, List<String>> topology;
     }
 
-    public static class TopologyResponse extends Response {
+    public static class TopologyResponse extends Message {
         public TopologyResponse(int msgId, int inReplyTo) {
             super("topology_ok", msgId, inReplyTo);
         }

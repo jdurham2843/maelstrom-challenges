@@ -9,11 +9,11 @@ public class GenerateIdHandler implements NodeHandler<
         GenerateIdHandler.GenerateIdRequest,
         GenerateIdHandler.GenerateIdResponse> {
 
-    public static class GenerateIdRequest extends Request {
+    public static class GenerateIdRequest extends Message {
 
     }
 
-    public static class GenerateIdResponse extends Response {
+    public static class GenerateIdResponse extends Message {
         @JsonProperty
         String id;
 

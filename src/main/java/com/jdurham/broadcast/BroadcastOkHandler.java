@@ -1,9 +1,6 @@
 package com.jdurham.broadcast;
 
-import com.jdurham.MessageContext;
-import com.jdurham.NodeHandler;
-import com.jdurham.Request;
-import com.jdurham.Response;
+import com.jdurham.*;
 
 public class BroadcastOkHandler implements NodeHandler<
         BroadcastOkHandler.BroadcastOkRequest,
@@ -15,12 +12,21 @@ public class BroadcastOkHandler implements NodeHandler<
         this.messageTracker = messageTracker;
     }
 
-    public static class BroadcastOkRequest extends Request {
+    public static class BroadcastOkRequest extends Message {
+        public BroadcastOkRequest(int msgId, int inReplyTo) {
+            super("broadcast_ok", msgId, inReplyTo);
+        }
+
+        public BroadcastOkRequest() {
+        }
     }
 
-    public static class BroadcastOkResponse extends Response {
+    public static class BroadcastOkResponse extends Message {
         public BroadcastOkResponse(String type, int msgId, int inReplyTo) {
             super(type, msgId, inReplyTo);
+        }
+
+        public BroadcastOkResponse() {
         }
     }
 
@@ -36,8 +42,9 @@ public class BroadcastOkHandler implements NodeHandler<
 
     @Override
     public BroadcastOkResponse handle(MessageContext messageContext, BroadcastOkRequest request) {
-        System.err.printf("Received broadcast ok for %s from node: %s%n", request.msgId, messageContext.src());
-        messageTracker.remove(request.msgId, messageContext.src());
+        System.err.printf("Received OK for %s from %s\n", request.inReplyTo, messageContext.src());
+
+        messageTracker.remove(request.inReplyTo, messageContext.src());
         return null;
     }
 }

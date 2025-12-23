@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +18,7 @@ public class Node {
 
     private final NodeMetadataStore nodeMetadataStore;
 
-    private final Map<String, NodeHandler<? extends Request, ? extends Response>> handlers = new HashMap<>();
+    private final Map<String, NodeHandler<? extends Message, ? extends Message>> handlers = new HashMap<>();
 
     static class InitHandler implements NodeHandler<InitHandler.InitRequest, InitHandler.InitResponse> {
 
@@ -46,7 +45,7 @@ public class Node {
             return new InitResponse("init_ok", request.msgId, request.msgId);
         }
 
-        public static class InitRequest extends Request {
+        public static class InitRequest extends Message {
             @JsonProperty
             @JsonAlias(value = "node_id")
             String nodeId;
@@ -55,7 +54,7 @@ public class Node {
             List<String> nodeIds;
         }
 
-        static class InitResponse extends Response {
+        static class InitResponse extends Message {
             public InitResponse(String type, int msgId, int inReplyTo) {
                 super(type, msgId, inReplyTo);
             }
@@ -68,7 +67,7 @@ public class Node {
         registerHandler("init", new InitHandler(nodeMetadataStore));
     }
 
-    <T extends Request, R extends Response> void registerHandler(String type, NodeHandler<T, R> handler) {
+    <T extends Message, R extends Message> void registerHandler(String type, NodeHandler<T, R> handler) {
         handlers.put(type, handler);
     }
 
@@ -76,12 +75,12 @@ public class Node {
         final JsonNode requestJsonNode = context.requestBody();
         final String type = requestJsonNode.get("type").asText();
 
-        final NodeHandler<? extends Request, ? extends Response> handler = handlers.get(type);
+        final NodeHandler<? extends Message, ? extends Message> handler = handlers.get(type);
 
         return doDispatch(handler, context);
     }
 
-    private <T extends Request, R extends Response> JsonNode doDispatch(NodeHandler<T, R> handler, MessageContext messageContext) throws JsonProcessingException {
+    private <T extends Message, R extends Message> JsonNode doDispatch(NodeHandler<T, R> handler, MessageContext messageContext) throws JsonProcessingException {
         final JsonNode requestJsonNode = messageContext.requestBody();
         final T request = mapper.treeToValue(requestJsonNode, handler.getRequestType());
         final R response = handler.handle(messageContext, request);
@@ -90,7 +89,7 @@ public class Node {
     }
 
     // main
-    void main() throws IOException {
+    void main() {
         final BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
         // handle

@@ -1,23 +1,31 @@
 package com.jdurham.broadcast;
 
-import com.jdurham.client.MaelstromRequest;
+import com.jdurham.Message;
 
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class BroadcastMessageTracker {
-    private final Map<String, MaelstromRequest> trackedRequests = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ConcurrentHashMap<Integer, Message>> trackedRequests = new ConcurrentHashMap<>();
 
-    void track(String dest, MaelstromRequest request) {
-        trackedRequests.put(request.msgId() + ":" + dest, request);
+    void track(String dest, Message request) {
+        trackedRequests.computeIfAbsent(dest, d -> new ConcurrentHashMap<>()).put(request.msgId, request);
     }
 
-    Collection<MaelstromRequest> getAll() {
-        return trackedRequests.values();
+    Set<Map.Entry<String, ConcurrentHashMap<Integer, Message>>> getAll() {
+        return trackedRequests.entrySet();
+    }
+
+    Set<Map.Entry<String, ConcurrentHashMap<Integer, Message>>> takeAll() {
+        final Map<String, ConcurrentHashMap<Integer, Message>> copy = new HashMap<>(this.trackedRequests);
+        trackedRequests.clear();
+
+        return copy.entrySet();
     }
 
     void remove(int msgId, String dest) {
-        trackedRequests.remove(msgId + ":" + dest);
+        trackedRequests.get(dest).remove(msgId);
     }
 }
