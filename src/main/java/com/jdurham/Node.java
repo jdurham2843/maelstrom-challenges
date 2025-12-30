@@ -96,29 +96,33 @@ public class Node {
         while (true) {
             try {
                 final String input = br.readLine();
-                // System.err.println("read message! " + input);
-                final JsonNode inputJsonNode = mapper.readTree(input);
-                final String src = inputJsonNode.get("src").asText();
-                final String dest = inputJsonNode.get("dest").asText();
-                final JsonNode requestBody = inputJsonNode.get("body");
-
-                final JsonNode responseBody = dispatchToHandler(new MessageContext(src, dest, requestBody));
-
-                if (responseBody != null) {
-                    final ObjectNode outputResponse = mapper.createObjectNode();
-                    outputResponse.put("src", dest);
-                    outputResponse.put("dest", src);
-                    outputResponse.put("body", responseBody);
-
-                    final String responseJson = mapper.writeValueAsString(outputResponse);
-                    // System.err.println("responding with " + outputResponse);
-                    System.out.println(responseJson);
-                } else {
-                    // System.err.println("response was null, so skipping.");
-                }
+                Thread.startVirtualThread(() -> handle(input));
             } catch (Exception e) {
                 System.err.println("Failed to read input: " + e.getMessage());
             }
+        }
+    }
+
+    private void handle(String input) {
+        try {
+            final JsonNode inputJsonNode = mapper.readTree(input);
+            final String src = inputJsonNode.get("src").asText();
+            final String dest = inputJsonNode.get("dest").asText();
+            final JsonNode requestBody = inputJsonNode.get("body");
+
+            final JsonNode responseBody = dispatchToHandler(new MessageContext(src, dest, requestBody));
+
+            if (responseBody != null) {
+                final ObjectNode outputResponse = mapper.createObjectNode();
+                outputResponse.put("src", dest);
+                outputResponse.put("dest", src);
+                outputResponse.put("body", responseBody);
+
+                final String responseJson = mapper.writeValueAsString(outputResponse);
+                System.out.println(responseJson);
+            }
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         }
     }
 }

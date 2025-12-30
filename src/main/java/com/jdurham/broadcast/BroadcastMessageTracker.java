@@ -8,24 +8,17 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class BroadcastMessageTracker {
-    private final ConcurrentHashMap<String, ConcurrentHashMap<Integer, Message>> trackedRequests = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Set<Integer>> trackedRequests = new ConcurrentHashMap<>();
 
-    void track(String dest, Message request) {
-        trackedRequests.computeIfAbsent(dest, d -> new ConcurrentHashMap<>()).put(request.msgId, request);
+    void track(String dest, int msgId) {
+        trackedRequests.computeIfAbsent(dest, d -> ConcurrentHashMap.newKeySet()).add(msgId);
     }
 
-    Set<Map.Entry<String, ConcurrentHashMap<Integer, Message>>> getAll() {
-        return trackedRequests.entrySet();
+    boolean contains(String neighbor, int msgId) {
+        return trackedRequests.getOrDefault(neighbor, ConcurrentHashMap.newKeySet()).contains(msgId);
     }
 
-    Set<Map.Entry<String, ConcurrentHashMap<Integer, Message>>> takeAll() {
-        final Map<String, ConcurrentHashMap<Integer, Message>> copy = new HashMap<>(this.trackedRequests);
-        trackedRequests.clear();
-
-        return copy.entrySet();
-    }
-
-    void remove(int msgId, String dest) {
-        trackedRequests.get(dest).remove(msgId);
+    void remove(String dest, int msgId) {
+        trackedRequests.getOrDefault(dest, ConcurrentHashMap.newKeySet()).remove(msgId);
     }
 }
