@@ -1,31 +1,34 @@
 package com.jdurham.broadcast.bulk;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.jdurham.*;
+import com.jdurham.Message;
+import com.jdurham.MessageContext;
+import com.jdurham.NodeHandler;
 import com.jdurham.broadcast.BroadcastHandler;
-import com.jdurham.broadcast.BroadcastOkHandler;
 
-import java.util.List;
+import java.util.Collection;
 
 public class BulkBroadcastHandler implements NodeHandler<
         BulkBroadcastHandler.BulkBroadcastRequest, BulkBroadcastHandler.BulkBroadcastResponse> {
 
     private final BroadcastHandler broadcastHandler;
+    private final NeighborMessageTracker neighborMessageTracker;
 
-    public BulkBroadcastHandler(BroadcastHandler broadcastHandler) {
+    public BulkBroadcastHandler(BroadcastHandler broadcastHandler, NeighborMessageTracker neighborMessageTracker) {
         this.broadcastHandler = broadcastHandler;
+        this.neighborMessageTracker = neighborMessageTracker;
     }
 
     public static class BulkBroadcastRequest extends Message {
         @JsonProperty
-        public List<BroadcastHandler.BroadcastRequest> broadcastRequests;
+        public Collection<Integer> messages;
 
         public BulkBroadcastRequest(
-                List<BroadcastHandler.BroadcastRequest> broadcastRequests,
+                Collection<Integer> messages,
                 String type,
                 int msgId,
                 int inReplyTo) {
-            this.broadcastRequests = broadcastRequests;
+            this.messages = messages;
             this.type = type;
             this.msgId = msgId;
             this.inReplyTo = inReplyTo;
@@ -35,15 +38,10 @@ public class BulkBroadcastHandler implements NodeHandler<
     }
 
     public static class BulkBroadcastResponse extends Message {
-        @JsonProperty
-        public List<BroadcastOkHandler.BroadcastOkRequest> broadcastOkResponses;
-
         public BulkBroadcastResponse(
-                List<BroadcastOkHandler.BroadcastOkRequest> broadcastResponses,
                 int msgId,
                 int inReplyTo) {
             super("bulk_broadcast_ok", msgId, inReplyTo);
-            this.broadcastOkResponses = broadcastResponses;
         }
     }
 
@@ -59,10 +57,8 @@ public class BulkBroadcastHandler implements NodeHandler<
 
     @Override
     public BulkBroadcastResponse handle(MessageContext messageContext, BulkBroadcastRequest request) {
-        final List<BroadcastOkHandler.BroadcastOkRequest> messages = request.broadcastRequests.stream()
-                .map(req -> broadcastHandler.handle(messageContext, req))
-                .toList();
-
-        return new BulkBroadcastResponse(messages, request.msgId, request.msgId);
+        neighborMessageTracker.resolve(messageContext.src(),  request.messages);
+        request.messages.forEach(message -> broadcastHandler.handle(messageContext.src(), message));
+        return new BulkBroadcastResponse(request.msgId, request.msgId);
     }
 }

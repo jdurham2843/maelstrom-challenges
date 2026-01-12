@@ -1,6 +1,8 @@
 package com.jdurham.broadcast;
 
-import com.jdurham.*;
+import com.jdurham.Message;
+import com.jdurham.MessageContext;
+import com.jdurham.NodeHandler;
 
 public class BroadcastOkHandler implements NodeHandler<
         BroadcastOkHandler.BroadcastOkRequest,
@@ -42,8 +44,6 @@ public class BroadcastOkHandler implements NodeHandler<
 
     @Override
     public BroadcastOkResponse handle(MessageContext messageContext, BroadcastOkRequest request) {
-        System.err.printf("Received OK for %s from %s\n", request.inReplyTo, messageContext.src());
-
         messageTracker.remove(messageContext.src(), request.inReplyTo);
         return null;
     }

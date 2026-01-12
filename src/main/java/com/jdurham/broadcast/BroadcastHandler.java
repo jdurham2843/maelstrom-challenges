@@ -1,11 +1,12 @@
 package com.jdurham.broadcast;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.jdurham.*;
-import com.jdurham.client.MaelstromClient;
-import com.jdurham.client.MaelstromRequest;
+import com.jdurham.Message;
+import com.jdurham.MessageContext;
+import com.jdurham.NodeHandler;
+import com.jdurham.NodeMetadataStore;
+import com.jdurham.broadcast.bulk.NeighborMessageTracker;
 
-import java.time.Duration;
 import java.util.List;
 
 public class BroadcastHandler implements NodeHandler<
@@ -14,13 +15,12 @@ public class BroadcastHandler implements NodeHandler<
 
     private final MessageStore messageStore;
     private final NodeMetadataStore nodeMetadataStore;
-    private final BroadcastMessageTracker broadcastMessageTracker;
-    private final MaelstromClient maelstromClient = new MaelstromClient();
+    private final NeighborMessageTracker neighborMessageTracker;
 
-    public BroadcastHandler(MessageStore messageStore, NodeMetadataStore nodeMetadataStore, BroadcastMessageTracker broadcastMessageTracker) {
+    public BroadcastHandler(MessageStore messageStore, NodeMetadataStore nodeMetadataStore, NeighborMessageTracker neighborMessageTracker) {
         this.messageStore = messageStore;
         this.nodeMetadataStore = nodeMetadataStore;
-        this.broadcastMessageTracker = broadcastMessageTracker;
+        this.neighborMessageTracker = neighborMessageTracker;
     }
 
     public static class BroadcastRequest extends Message {
@@ -56,42 +56,19 @@ public class BroadcastHandler implements NodeHandler<
 
     @Override
     public BroadcastOkHandler.BroadcastOkRequest handle(MessageContext messageContext, BroadcastRequest request) {
-        if (!messageStore.contains(request.message)) {
-            messageStore.add(request.message);
-
-            Thread.startVirtualThread(() -> {
-                final List<String> neighbors = nodeMetadataStore.topology.get(nodeMetadataStore.nodeId);
-                neighbors.stream().filter(neighbor -> !messageContext.src().equals(neighbor)).forEach(neighbor -> {
-                    final int msgId = MsgIdGenerator.getNextId();
-
-                    final BroadcastRequest broadcastRequest = new BroadcastRequest(request.message, request.type, msgId, request.inReplyTo);
-
-                    broadcastMessageTracker.track(neighbor, msgId);
-                    sendToNeighbor(neighbor, broadcastRequest);
-                });
-            });
-        }
-
+        handle(messageContext.src(), request.message);
         return new BroadcastOkHandler.BroadcastOkRequest(request.msgId, request.msgId);
     }
 
-    private void sendToNeighbor(String neighbor, BroadcastRequest broadcastRequest) {
-        Thread.startVirtualThread(() -> {
-            int retryAttempt = 0;
-            while (broadcastMessageTracker.contains(neighbor, broadcastRequest.msgId)) {
-                if (retryAttempt > 0) {
-                    System.err.println(retryAttempt + " timed out waiting for broadcast response for msgId " + broadcastRequest.msgId + "send to " + neighbor);
-                }
-                final MaelstromRequest maelstromRequest = new MaelstromRequest(nodeMetadataStore.nodeId, neighbor, broadcastRequest, MsgIdGenerator.getNextId());
-                maelstromClient.send(maelstromRequest);
+    public void handle(String src, int message) {
+        if (!messageStore.contains(message)) {
+            messageStore.add(message);
 
-                retryAttempt++;
-                try {
-                    Thread.sleep(Duration.ofSeconds(retryAttempt));
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
+            nodeMetadataStore.topology.get(nodeMetadataStore.nodeId).stream()
+                    .filter(nodeId -> !nodeId.equals(src) || (!nodeMetadataStore.topology.getOrDefault(src, List.of()).contains(nodeId)))
+                    .forEach(nodeId -> {
+                        neighborMessageTracker.track(nodeId, message);
+                    });
+        }
     }
 }

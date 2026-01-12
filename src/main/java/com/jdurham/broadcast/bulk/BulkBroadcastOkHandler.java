@@ -1,26 +1,21 @@
 package com.jdurham.broadcast.bulk;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.jdurham.*;
-import com.jdurham.broadcast.BroadcastHandler;
-import com.jdurham.broadcast.BroadcastMessageTracker;
-import com.jdurham.broadcast.BroadcastOkHandler;
-
-import java.util.List;
+import com.jdurham.Message;
+import com.jdurham.MessageContext;
+import com.jdurham.NodeHandler;
 
 public class BulkBroadcastOkHandler implements NodeHandler<
         BulkBroadcastOkHandler.BroadcastOkRequest,
         BulkBroadcastOkHandler.BroadcastOkResponse> {
 
-    private final BroadcastOkHandler broadcastOkHandler;
+    private final BroadcastManager broadcastManager;
 
-    public BulkBroadcastOkHandler(BroadcastOkHandler broadcastOkHandler) {
-        this.broadcastOkHandler = broadcastOkHandler;
+
+    public BulkBroadcastOkHandler(BroadcastManager broadcastManager) {
+        this.broadcastManager = broadcastManager;
     }
 
     public static class BroadcastOkRequest extends Message {
-        @JsonProperty
-        public List<BroadcastOkHandler.BroadcastOkRequest> broadcastOkResponses;
     }
 
     public static class BroadcastOkResponse extends Message {
@@ -41,7 +36,7 @@ public class BulkBroadcastOkHandler implements NodeHandler<
 
     @Override
     public BroadcastOkResponse handle(MessageContext messageContext, BroadcastOkRequest request) {
-        request.broadcastOkResponses.forEach(req -> broadcastOkHandler.handle(messageContext, req));
+        broadcastManager.logMsgReceived(messageContext.src(), request.inReplyTo);
         return null;
     }
 }
