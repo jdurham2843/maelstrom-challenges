@@ -9,9 +9,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 public class BroadcastManager {
     private final Map<String, Thread> broadcasters = new ConcurrentHashMap<>();
+    private final Map<String, Semaphore> threadNotifiers = new ConcurrentHashMap<>();
     private final Map<String, Set<Integer>> msgIdResponsesReceived = new ConcurrentHashMap<>();
 
     private final NeighborMessageTracker neighborMessageTracker;
@@ -40,6 +43,9 @@ public class BroadcastManager {
 
     public void startBroadcaster(String neighborId) {
         if (!broadcasters.containsKey(neighborId)) {
+            final Semaphore semaphore = new Semaphore(0);
+            threadNotifiers.put(neighborId, semaphore);
+
             broadcasters.put(neighborId, Thread.startVirtualThread(() -> {
                 try {
                     final NavigableMap<Integer, RequestTracker> pendingBroadcastRequests = new TreeMap<>();
@@ -60,16 +66,27 @@ public class BroadcastManager {
                                 pendingBroadcastRequests.lastEntry().getValue() :
                                 null;
 
+                        final Set<Integer> pendingMessages = neighborMessageTracker.takePendingMessages(neighborId);
+
+                        final boolean shouldRetry = (previousRequestTracker != null && (previousRequestTracker.retryInstant.isBefore(Instant.now())));
+
                         // Create and Track
-                        final Collection<Integer> pendingMessages = new HashSet<>(neighborMessageTracker.getPendingMessages(neighborId));
-                        if (!pendingMessages.isEmpty() && (previousRequestTracker == null || (previousRequestTracker.retryInstant.compareTo(Instant.now()) <= 0))) {
+                        if (!pendingMessages.isEmpty() || shouldRetry) {
                             final int msgId = MsgIdGenerator.getNextId();
+
+                            final Set<Integer> payload = new HashSet<>(pendingMessages);
+                            if (shouldRetry) {
+                                payload.addAll(previousRequestTracker.broadcastRequest.messages);
+                            }
+
                             final BulkBroadcastHandler.BulkBroadcastRequest broadcastRequest =
-                                    new BulkBroadcastHandler.BulkBroadcastRequest(pendingMessages, "bulk_broadcast", msgId, msgId);
+                                    new BulkBroadcastHandler.BulkBroadcastRequest(payload, "bulk_broadcast", msgId, msgId);
 
                             final RequestTracker requestTracker = new RequestTracker(broadcastRequest);
                             requestTracker.retryCount = previousRequestTracker != null ? previousRequestTracker.retryCount + 1 : 0;
-                            requestTracker.retryInstant = Instant.now().plus(Duration.ofMillis(requestTracker.retryCount * 100L));
+                            requestTracker.retryInstant = requestTracker.retryCount == 0 ?
+                                    Instant.now().plus(Duration.ofMillis(150L)) :
+                                    Instant.now().plus(Duration.ofMillis(requestTracker.retryCount * 100L));
 
                             pendingBroadcastRequests.put(msgId, requestTracker);
 
@@ -77,7 +94,7 @@ public class BroadcastManager {
                             maelstromClient.send(maelstromRequest);
                         }
 
-                        Thread.sleep(20L);
+                        semaphore.tryAcquire(10, TimeUnit.MILLISECONDS);
                     }
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
@@ -88,5 +105,12 @@ public class BroadcastManager {
 
     public void logMsgReceived(String neighborId, Integer msgId) {
         msgIdResponsesReceived.computeIfAbsent(neighborId, k -> ConcurrentHashMap.newKeySet()).add(msgId);
+    }
+
+    public void wakeBroadcaster(String neighborId) {
+        if (neighborMessageTracker.getPendingMessages(neighborId).isEmpty()) {
+            System.err.println("hit batch limit on " + neighborId);
+            threadNotifiers.get(neighborId).release();
+        }
     }
 }

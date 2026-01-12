@@ -5,6 +5,7 @@ import com.jdurham.Message;
 import com.jdurham.MessageContext;
 import com.jdurham.NodeHandler;
 import com.jdurham.NodeMetadataStore;
+import com.jdurham.broadcast.bulk.BroadcastManager;
 import com.jdurham.broadcast.bulk.NeighborMessageTracker;
 
 import java.util.List;
@@ -16,11 +17,13 @@ public class BroadcastHandler implements NodeHandler<
     private final MessageStore messageStore;
     private final NodeMetadataStore nodeMetadataStore;
     private final NeighborMessageTracker neighborMessageTracker;
+    private final BroadcastManager broadcastManager;
 
-    public BroadcastHandler(MessageStore messageStore, NodeMetadataStore nodeMetadataStore, NeighborMessageTracker neighborMessageTracker) {
+    public BroadcastHandler(MessageStore messageStore, NodeMetadataStore nodeMetadataStore, NeighborMessageTracker neighborMessageTracker, BroadcastManager broadcastManager) {
         this.messageStore = messageStore;
         this.nodeMetadataStore = nodeMetadataStore;
         this.neighborMessageTracker = neighborMessageTracker;
+        this.broadcastManager = broadcastManager;
     }
 
     public static class BroadcastRequest extends Message {
@@ -68,6 +71,7 @@ public class BroadcastHandler implements NodeHandler<
                     .filter(nodeId -> !nodeId.equals(src) || (!nodeMetadataStore.topology.getOrDefault(src, List.of()).contains(nodeId)))
                     .forEach(nodeId -> {
                         neighborMessageTracker.track(nodeId, message);
+                        broadcastManager.wakeBroadcaster(nodeId);
                     });
         }
     }

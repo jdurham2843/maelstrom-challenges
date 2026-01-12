@@ -19,6 +19,12 @@ public class NeighborMessageTracker {
         return pendingMessages.computeIfAbsent(neighborId, k -> ConcurrentHashMap.newKeySet());
     }
 
+    public Set<Integer> takePendingMessages(String neighborId) {
+        final Set<Integer> messages = pendingMessages.put(neighborId, ConcurrentHashMap.newKeySet());
+
+        return messages != null ? messages : Set.of();
+    }
+
     public void resolve(String neighborId, Collection<Integer> messages) {
         pendingMessages.computeIfAbsent(neighborId, k -> ConcurrentHashMap.newKeySet()).removeAll(messages);
         neighborStores.computeIfAbsent(neighborId, k -> ConcurrentHashMap.newKeySet()).addAll(messages);
