@@ -68,10 +68,9 @@ public class BroadcastHandler implements NodeHandler<
             messageStore.add(message);
 
             nodeMetadataStore.topology.get(nodeMetadataStore.nodeId).stream()
-                    .filter(nodeId -> !nodeId.equals(src) || (!nodeMetadataStore.topology.getOrDefault(src, List.of()).contains(nodeId)))
+                    .filter(nodeId -> !nodeId.equals(src))
                     .forEach(nodeId -> {
                         neighborMessageTracker.track(nodeId, message);
-                        broadcastManager.wakeBroadcaster(nodeId);
                     });
         }
     }

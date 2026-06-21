@@ -96,7 +96,7 @@ public class Node {
         while (true) {
             try {
                 final String input = br.readLine();
-                Thread.startVirtualThread(() -> handle(input));
+                handle(input);
             } catch (Exception e) {
                 System.err.println("Failed to read input: " + e.getMessage());
             }

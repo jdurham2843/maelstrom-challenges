@@ -79,14 +79,14 @@ public class BroadcastManager {
                                 payload.addAll(previousRequestTracker.broadcastRequest.messages);
                             }
 
+                            System.err.println("Need to communicate the following to node " + neighborId + ": " + payload);
+
                             final BulkBroadcastHandler.BulkBroadcastRequest broadcastRequest =
                                     new BulkBroadcastHandler.BulkBroadcastRequest(payload, "bulk_broadcast", msgId, msgId);
 
                             final RequestTracker requestTracker = new RequestTracker(broadcastRequest);
                             requestTracker.retryCount = previousRequestTracker != null ? previousRequestTracker.retryCount + 1 : 0;
-                            requestTracker.retryInstant = requestTracker.retryCount == 0 ?
-                                    Instant.now().plus(Duration.ofMillis(150L)) :
-                                    Instant.now().plus(Duration.ofMillis(requestTracker.retryCount * 100L));
+                            requestTracker.retryInstant = Instant.now().plus(Duration.ofMillis(100L));
 
                             pendingBroadcastRequests.put(msgId, requestTracker);
 
@@ -108,9 +108,6 @@ public class BroadcastManager {
     }
 
     public void wakeBroadcaster(String neighborId) {
-        if (neighborMessageTracker.getPendingMessages(neighborId).isEmpty()) {
-            System.err.println("hit batch limit on " + neighborId);
-            threadNotifiers.get(neighborId).release();
-        }
+        threadNotifiers.get(neighborId).release();
     }
 }

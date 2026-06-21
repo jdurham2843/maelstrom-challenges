@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class TopologyHandler implements NodeHandler<
         TopologyHandler.TopologyRequest,
@@ -59,28 +62,16 @@ public class TopologyHandler implements NodeHandler<
 
     static Map<String, List<String>> constructTopology(List<String> nodeIds) {
         Map<String, List<String>> topology = new HashMap<>(nodeIds.size());
-        nodeIds.forEach(id -> {
-            List<String> neighbors = new ArrayList<>();
-            topology.put(id, neighbors);
 
-            int current = Integer.parseInt(id.split("n")[1]);
-            // up
-            if (current - 5 >= 0) {
-                neighbors.add("n" + (current - 5));
+        for (int i = 0; i < nodeIds.size(); i++) {
+            if (i == 0) {
+                topology.put("n0", IntStream.range(1, nodeIds.size())
+                        .mapToObj(index -> "n" + index)
+                        .collect(Collectors.toList()));
+            } else {
+                topology.put("n" + i, List.of("n0"));
             }
-            // down
-            if (current + 5 <= nodeIds.size() - 1) {
-                neighbors.add("n" + (current + 5));
-            }
-            // left
-            if (current - 1 >= 0 && (current - 1) % 5 < current % 5) {
-                neighbors.add("n" + (current - 1));
-            }
-            // right
-            if (current + 1 <= nodeIds.size() - 1 && (current + 1) % 5 > current % 5) {
-                neighbors.add("n" + (current + 1));
-            }
-        });
+        }
 
         return topology;
     }

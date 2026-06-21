@@ -15,10 +15,6 @@ public class NeighborMessageTracker {
         }
     }
 
-    public Set<Integer> getPendingMessages(String neighborId) {
-        return pendingMessages.computeIfAbsent(neighborId, k -> ConcurrentHashMap.newKeySet());
-    }
-
     public Set<Integer> takePendingMessages(String neighborId) {
         final Set<Integer> messages = pendingMessages.put(neighborId, ConcurrentHashMap.newKeySet());
 
