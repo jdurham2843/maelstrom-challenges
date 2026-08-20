@@ -94,7 +94,7 @@ public class BroadcastManager {
                             maelstromClient.send(maelstromRequest);
                         }
 
-                        semaphore.tryAcquire(10, TimeUnit.MILLISECONDS);
+                        semaphore.tryAcquire(100, TimeUnit.MILLISECONDS);
                     }
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
