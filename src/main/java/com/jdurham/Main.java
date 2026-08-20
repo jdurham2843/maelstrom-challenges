@@ -18,7 +18,7 @@ public class Main {
         final MessageStore messageStore = new MessageStore();
         final NeighborMessageTracker neighborMessageTracker = new NeighborMessageTracker();
         final BroadcastManager broadcastManager = new BroadcastManager(neighborMessageTracker, nodeMetadataStore, new MaelstromClient());
-        final BroadcastHandler broadcastHandler = new BroadcastHandler(messageStore, nodeMetadataStore, neighborMessageTracker, broadcastManager);
+        final BroadcastHandler broadcastHandler = new BroadcastHandler(messageStore, nodeMetadataStore, neighborMessageTracker);
 
         node.registerHandler("echo", new OkHandler());
         node.registerHandler("generate", new GenerateIdHandler());

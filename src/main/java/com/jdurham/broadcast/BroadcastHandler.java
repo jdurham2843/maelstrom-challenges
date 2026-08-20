@@ -17,13 +17,11 @@ public class BroadcastHandler implements NodeHandler<
     private final MessageStore messageStore;
     private final NodeMetadataStore nodeMetadataStore;
     private final NeighborMessageTracker neighborMessageTracker;
-    private final BroadcastManager broadcastManager;
 
-    public BroadcastHandler(MessageStore messageStore, NodeMetadataStore nodeMetadataStore, NeighborMessageTracker neighborMessageTracker, BroadcastManager broadcastManager) {
+    public BroadcastHandler(MessageStore messageStore, NodeMetadataStore nodeMetadataStore, NeighborMessageTracker neighborMessageTracker) {
         this.messageStore = messageStore;
         this.nodeMetadataStore = nodeMetadataStore;
         this.neighborMessageTracker = neighborMessageTracker;
-        this.broadcastManager = broadcastManager;
     }
 
     public static class BroadcastRequest extends Message {
